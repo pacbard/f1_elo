@@ -39,7 +39,8 @@ select distinct
   round,
   1000 as elo
 from results
-  cross join races
+  join races on races.raceId = results.raceId
+order by driverId, year, round
 ;
 '''
 
