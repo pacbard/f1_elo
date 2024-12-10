@@ -12,6 +12,13 @@ For example, if a driver ends the race in 5th position out of 12 drivers, they h
 
 Elo ratings are calculated at the end of each race, and Elo ratings are pushed forward to the following races.
 
+The dataset is available on [Motheduck](https://motherduck.com). Download it using this share:
+
+```Code
+-- Run this snippet to attach database
+ATTACH 'md:_share/F1_Results/2c252e3d-f9a1-4ab1-93e1-328d84b6347b';
+```
+
 # Greatest Of All Time 
 
 ```sql goat
@@ -44,6 +51,7 @@ select
   elo.year,
   elo.round,
   races.date,
+  races.name,
   elo.driverId,
   elo.elo,
   case
