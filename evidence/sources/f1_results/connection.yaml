@@ -1,0 +1,5 @@
+# This file was automatically generated
+name: f1_results
+type: motherduck
+options:
+  database: F1_Results

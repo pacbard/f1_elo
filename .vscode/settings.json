@@ -7,5 +7,12 @@
             "driver": "DuckDB",
             "databaseFilePath": "f1_results.duckdb"
         }
-    ]
+    ],
+    "editor.acceptSuggestionOnEnter": true,
+    "editor.quickSuggestions": {
+        "other": false,
+        "comments": false,
+        "strings": false
+    },
+    "editor.quickSuggestionsDelay": 300
 }
