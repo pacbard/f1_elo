@@ -37,7 +37,8 @@ select distinct
   results.raceId,
   year,
   round,
-  1000 as elo
+  1000 as elo,
+  0 as elo_change,
 from results
   join races on races.raceId = results.raceId
 order by driverId, year, round

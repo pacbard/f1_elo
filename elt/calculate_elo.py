@@ -33,7 +33,7 @@ def calculate_new_elo(conn):
                 when position is null then 99999
                 else position::int 
             end as position,
-            constructors.constructorRef
+            constructors.constructorRef,
         from results
             join races on races.raceId = results.raceId
             join drivers on drivers.driverId = results.driverId
@@ -47,31 +47,22 @@ def calculate_new_elo(conn):
             res.round,
             res.position,
             res2.driverId as opponentId,
-            res2.position as opponentPosition
+            res2.position as opponentPosition,
+            case
+                when res.position::int < res2.position::int then 1
+                when res.position::int = res2.position::int then 0.5
+                when res.position::int > res2.position::int then 0
+            end as headToHead
         from res
         join res as res2 on res2.raceId = res.raceId 
             and res2.driverId != res.driverId
+        group by all
     )
     select 
         race_performance.raceId, race_performance.year, race_performance.round, race_performance.driverId,
-        avg(coalesce(elo_opp.elo, 1000)) as elo_opponents,
-        avg(case 
-                when position::int < opponentPosition::int then 400
-                when position = opponentPosition and elo_dri.elo >= elo_opp.elo then 200
-                when position = opponentPosition and elo_dri.elo < elo_opp.elo then -200
-                else -400 
-            end) as elo_change,
-        cast((elo_opponents + elo_change) as int) as new_elo,
-        case
-            when race_performance.round = (select max(round) from races where races.year = race_performance.year) 
-            then race_performance.year + 1
-        else race_performance.year 
-        end as next_year,
-        case
-            when race_performance.round = (select max(round) from races where races.year = race_performance.year) 
-            then 1
-        else race_performance.round + 1 
-    end as next_round
+        -- update formula: old_rating + (k_factor * (score - expected_score))
+        avg(elo_dri.elo + (32 * (race_performance.headToHead - (1.0 / (1.0 + POWER(10.0, (elo_opp.elo - elo_dri.elo) / 400.0)))))) as new_elo
+
     from race_performance
         left join elo as elo_dri on elo_dri.driverId = race_performance.driverId 
             and elo_dri.year = race_performance.year 
@@ -84,10 +75,14 @@ def calculate_new_elo(conn):
     ;
 
     update elo
-        set elo = coalesce(new_elo.new_elo, 1000)
+        set 
+            elo = new_elo.new_elo
     from new_elo
-    where elo.driverId = new_elo.driverId and elo.year >= new_elo.next_year and elo.round >= new_elo.next_round
-        and elo.year = {year} and elo.round = {round_num}
+    where 
+        new_elo.new_elo is not null 
+        and elo.driverId = new_elo.driverId 
+        and new_elo.year = {year} and new_elo.round = {round_num}
+        and ((elo.year = {year} and elo.round >= {round_num}) or elo.year > {year})
     """
 
     conn.sql(update_query)
