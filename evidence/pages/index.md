@@ -1,5 +1,5 @@
 ---
-title: F1 Elo Ratings
+title: F1 Elo Ratings 🏎️
 ---
 
 Inspired by this [YouTube Video](https://www.youtube.com/watch?v=U16a8tdrbII), I calculate the Elo ratings for all F1 drivers.
@@ -19,7 +19,7 @@ The dataset is available on [Motheduck](https://motherduck.com). Download it usi
 ATTACH 'md:_share/F1_Results/2c252e3d-f9a1-4ab1-93e1-328d84b6347b';
 ```
 
-# Greatest Of All Time 
+# Greatest Of All Time 🐐
 
 ```sql goat
 select
@@ -49,7 +49,7 @@ order by max_elo desc
   <Column id=race_url contentType=link title="Wikipedia Page" linkLabel="Race →"/>
 </DataTable>
 
-# Change over Time
+# Change over Time 📈
 
 <Dropdown data={goat} name=driver_filter value=driverId label=driver_name multiple=true defaultValue={[1, 830, 3]}/>
 
