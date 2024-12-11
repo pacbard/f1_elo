@@ -53,6 +53,8 @@ order by max_elo desc
 
 <Dropdown data={goat} name=driver_filter value=driverId label=driver_name multiple=true defaultValue={[1, 830, 3]}/>
 
+<DateRange data={goat} name=dates_filter dates=race_date/>
+
 ```sql timeline
 select
   row_number() over (order by elo.year, elo.round) as race_order,
@@ -71,6 +73,8 @@ from f1_results.drivers
   join f1_results.races on races.raceId = elo.raceId
 where
   drivers.driverId in ${inputs.driver_filter.value}
+  and
+  races.date between '${inputs.dates_filter.start}' and '${inputs.dates_filter.end}'
 ```
 
 <LineChart
