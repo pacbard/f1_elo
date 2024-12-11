@@ -2,7 +2,7 @@
 title: F1 Elo Ratings 🏎️
 ---
 
-Inspired by this [YouTube Video](https://www.youtube.com/watch?v=U16a8tdrbII), I calculate the Elo ratings for all F1 drivers.
+Inspired by this [YouTube Video](https://www.youtube.com/watch?v=U16a8tdrbII), I calculate the [Elo ratings](https://en.wikipedia.org/wiki/Elo_rating_system) for all F1 drivers.
 
 Unlike the linked video, where Elo ratings were based on within-team matches, I calculate Elo ratings by race. 
 
