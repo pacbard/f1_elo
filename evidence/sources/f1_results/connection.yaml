@@ -1,5 +1,8 @@
 # This file was automatically generated
-name: f1_results
 type: motherduck
+name: f1_results
 options:
   database: F1_Results
+# Advanced Options, you probably don't want to change this
+buildOptions:
+  batchSize: 1000000
