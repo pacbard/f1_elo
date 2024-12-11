@@ -12,7 +12,7 @@ For example, if a driver ends the race in 5th position out of 12 drivers, they h
 
 Elo ratings are calculated at the end of each race, and Elo ratings are pushed forward to the following races.
 
-The dataset is available on [Motheduck](https://motherduck.com). Download it using this share:
+The dataset is available on [Motherduck](https://motherduck.com). Download it using this share:
 
 ```Code
 -- Run this snippet to attach database
