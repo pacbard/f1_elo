@@ -25,13 +25,17 @@ ATTACH 'md:_share/F1_Results/2c252e3d-f9a1-4ab1-93e1-328d84b6347b';
 select
   drivers.*,
   case
-    when code is not null then surname || ', ' || left(forename, 1) || ' (' || code || ')'
+    when code is not null then surname || ', ' || forename
     else surname || ', ' || left(forename, 1)
   end as driver_name,
-  max(elo.elo) as max_elo
+  elo.elo as max_elo, 
+  races.name as race_name,
+  races.date as race_date,
+  races.url as race_url
 from f1_results.drivers
   join f1_results.elo on elo.driverId = drivers.driverId
-group by all
+  join f1_results.races on races.raceId = elo.raceId
+qualify row_number() OVER (partition by elo.driverId ORDER BY elo.elo DESC) = 1; 
 order by max_elo desc
 ```
 
@@ -39,11 +43,15 @@ order by max_elo desc
   <Column id=surname/>
   <Column id=forename/>
   <Column id=max_elo/>
+  <Column id=url contentType=link title="Wikipedia Page" linkLabel="Driver →" />
+  <Column id=race_name/>
+  <Column id=race_date/>
+  <Column id=race_url contentType=link title="Wikipedia Page" linkLabel="Race →"/>
 </DataTable>
 
 # Change over Time
 
-<Dropdown data={goat} name=driver_filter value=driverId label=driver_name multiple=true defaultValue={[1]}/>
+<Dropdown data={goat} name=driver_filter value=driverId label=driver_name multiple=true defaultValue={[1, 830, 3]}/>
 
 ```sql timeline
 select
@@ -55,8 +63,8 @@ select
   elo.driverId,
   elo.elo,
   case
-    when code is not null then surname || ', ' || left(forename, 1) || ' (' || code || ')'
-    else surname || ', ' || left(forename, 1)
+    when code is not null then surname || ', ' || forename
+    else surname || ', ' || forename
   end as driver_name,
 from f1_results.drivers
   join f1_results.elo on elo.driverId = drivers.driverId
