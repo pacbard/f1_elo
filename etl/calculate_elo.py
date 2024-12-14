@@ -57,21 +57,26 @@ def calculate_new_elo(conn):
         join res as res2 on res2.raceId = res.raceId 
             and res2.driverId != res.driverId
         group by all
+    ),
+    elo_calc as (
+        select 
+            race_performance.raceId, race_performance.year, race_performance.round, race_performance.driverId, race_performance.opponentId,
+            -- update formula: old_rating + (k_factor * (score - expected_score))
+            elo_dri.elo as driverElo, elo_opp.elo as opponentElo, race_performance.headToHead,
+            32 * (race_performance.headToHead - (1.0 / (1.0 + POWER(10.0, (elo_opp.elo - elo_dri.elo) / 400.0)))) as change_elo
+        from race_performance
+            left join elo as elo_dri on elo_dri.driverId = race_performance.driverId 
+                and elo_dri.year = race_performance.year 
+                and elo_dri.round = race_performance.round
+            left join elo as elo_opp on elo_opp.driverId = race_performance.opponentId 
+                and elo_opp.year = race_performance.year 
+                and elo_opp.round = race_performance.round
+        order by race_performance.year, race_performance.round, race_performance.driverId
     )
-    select 
-        race_performance.raceId, race_performance.year, race_performance.round, race_performance.driverId,
-        -- update formula: old_rating + (k_factor * (score - expected_score))
-        avg(elo_dri.elo + (32 * (race_performance.headToHead - (1.0 / (1.0 + POWER(10.0, (elo_opp.elo - elo_dri.elo) / 400.0)))))) as new_elo
-
-    from race_performance
-        left join elo as elo_dri on elo_dri.driverId = race_performance.driverId 
-            and elo_dri.year = race_performance.year 
-            and elo_dri.round = race_performance.round
-        left join elo as elo_opp on elo_opp.driverId = race_performance.opponentId 
-            and elo_opp.year = race_performance.year 
-            and elo_opp.round = race_performance.round
-    group by all
-    order by race_performance.year, race_performance.round, race_performance.driverId
+    select raceId, year, round, driverId, avg(driverElo) + sum(change_elo) as new_elo 
+    from elo_calc 
+    group by all 
+    order by year, round, driverId
     ;
 
     update elo
