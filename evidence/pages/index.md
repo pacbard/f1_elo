@@ -31,7 +31,8 @@ select
   elo.elo as max_elo, 
   races.name as race_name,
   races.date as race_date,
-  races.url as race_url
+  races.url as race_url,
+  '/drivers/' || drivers.driverId::int as driver_link
 from f1_results.drivers
   join f1_results.elo on elo.driverId = drivers.driverId
   join f1_results.races on races.raceId = elo.raceId
@@ -39,14 +40,14 @@ qualify row_number() OVER (partition by elo.driverId ORDER BY elo.elo DESC) = 1;
 order by max_elo desc
 ```
 
-<DataTable data={goat}>
+<DataTable data={goat} wrapTitles=true link=driver_link>
   <Column id=surname/>
   <Column id=forename/>
   <Column id=max_elo/>
-  <Column id=url contentType=link title="Wikipedia Page" linkLabel="Driver →" />
   <Column id=race_name/>
   <Column id=race_date/>
-  <Column id=race_url contentType=link title="Wikipedia Page" linkLabel="Race →"/>
+  <Column id=url contentType=link title="Wiki" linkLabel="Driver →" />
+  <Column id=race_url contentType=link title="Wiki" linkLabel="Race →"/>
 </DataTable>
 
 # Change over Time 📈

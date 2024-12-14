@@ -87,8 +87,10 @@ race_performance as (
 ),
 elo_start as (
     select
-        raceId,
         driverId,
+        raceId,
+        year,
+        round,
         coalesce(lag(elo, 1) over (partition by driverId order by year, round), 1000) as elo,
     from elo
 ),
