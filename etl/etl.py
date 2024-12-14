@@ -119,7 +119,7 @@ elo_sum as (
         sum(R)::float as R,
         sum(E)::float as E,
         -- K * (Result - Expected)
-        32::float * (sum(R)::float - sum(E)::float) as change,
+        1::float * (sum(R)::float - sum(E)::float) as change,
         elo as driverElo
     from elo_setup
     group by all
