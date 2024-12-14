@@ -22,7 +22,7 @@ def calculate_new_elo(conn):
     -- Update the drivers' Elo rating after a race
     update elo
         set 
-            elo = elo_calc.elo + elo_calc.elo_change,
+            elo = elo_calc.new_elo,
             elo_change = elo_calc.elo_change,
             R = elo_calc.R,
             E = elo_calc.E
@@ -31,16 +31,6 @@ def calculate_new_elo(conn):
         elo.driverId = elo_calc.driverId
         and elo.raceId = elo_calc.raceId
         and elo.year = {year} and elo.round = {round_num};
-
-    -- Push forward the new Elo rating to future races
-    update elo
-        set 
-            elo_starting = elo_calc.elo + elo_calc.elo_change
-    from elo_calc
-    where 
-        elo.driverId = elo_calc.driverId
-        and elo_calc.year = {year} and elo_calc.round = {round_num}
-        and ((elo.year = {year} and elo.round > {round_num}) or elo.year > {year});
     """
 
     conn.sql(update_query)

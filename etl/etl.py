@@ -37,10 +37,9 @@ select distinct
   results.raceId,
   year,
   round,
-  1000::float as elo_starting,
-  0::float as elo_change,
-  1000::float as elo,
-  0::float as R, 0::float as E
+  NULL::float as elo_change,
+  NULL::float as elo,
+  NULL::float as R, NULL::float as E
 from results
   join races on races.raceId = results.raceId
 order by driverId, year, round
@@ -86,6 +85,13 @@ race_performance as (
         and res2.driverId != res.driverId
     group by all
 ),
+elo_start as (
+    select
+        raceId,
+        driverId,
+        coalesce(lag(elo, 1) over (partition by driverId order by year, round), 1000) as elo,
+    from elo
+),
 elo_setup as (
     select 
         race_performance.raceId, 
@@ -98,10 +104,10 @@ elo_setup as (
         -- Probability of the expected outcome: odds / (odds + 1)
         pow(10, (elo_dri.elo - elo_opp.elo) / 400) / (pow(10, (elo_dri.elo - elo_opp.elo) / 400) + 1) as E,
     from race_performance
-        left join elo as elo_dri on elo_dri.driverId = race_performance.driverId 
-            and elo_dri.raceId = race_performance.raceId 
-        left join elo as elo_opp on elo_opp.driverId = race_performance.opponentId 
-            and elo_opp.raceId = race_performance.raceId 
+        left join elo_start as elo_dri on elo_dri.driverId = race_performance.driverId
+            and elo_dri.raceId = race_performance.raceId
+        left join elo_start as elo_opp on elo_opp.driverId = race_performance.opponentId
+            and elo_opp.raceId = race_performance.raceId
     order by race_performance.raceId, race_performance.driverId
 ),
 elo_sum as (
@@ -113,7 +119,7 @@ elo_sum as (
         sum(R)::float as R,
         sum(E)::float as E,
         -- K * (Result - Expected)
-        1::float * (sum(R)::float - sum(E)::float) as change,
+        32::float * (sum(R)::float - sum(E)::float) as change,
         elo as driverElo
     from elo_setup
     group by all
