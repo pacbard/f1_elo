@@ -84,7 +84,7 @@ where
   series=driver_name
   step=true
   chartAreaHeight=500
-  yMin=800
-  yMax=1600
+  yMin=850
+  yMax=1500
 />
 
