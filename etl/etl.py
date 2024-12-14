@@ -37,11 +37,92 @@ select distinct
   results.raceId,
   year,
   round,
-  1000 as elo,
-  0 as elo_change,
+  1000::float as elo_starting,
+  0::float as elo_change,
+  1000::float as elo,
+  0::float as R, 0::float as E
 from results
   join races on races.raceId = results.raceId
 order by driverId, year, round
+;
+
+create or replace view elo_calc as
+WITH
+res as (
+    select
+        results.raceId,
+        races.year,
+        races.round,
+        races.name,
+        drivers.driverId,
+        drivers.driverRef,
+        case
+            when position is null then 99999
+            else position::int 
+        end as position,
+        constructors.constructorRef,
+    from results
+        join races on races.raceId = results.raceId
+        join drivers on drivers.driverId = results.driverId
+        join constructors on constructors.constructorId = results.constructorId
+),
+race_performance as (
+    select
+        res.driverId,
+        res.raceId,
+        res.year,
+        res.round,
+        res.position,
+        res2.driverId as opponentId,
+        res2.position as opponentPosition,
+        case
+            when res.position::int < res2.position::int then 1
+            when res.position::int = res2.position::int then 0.5
+            when res.position::int > res2.position::int then 0
+        end as headToHead,
+        count(distinct res2.driverId) as nOpponents
+    from res
+    join res as res2 on res2.raceId = res.raceId 
+        and res2.driverId != res.driverId
+    group by all
+),
+elo_setup as (
+    select 
+        race_performance.raceId, 
+        race_performance.year, 
+        race_performance.round, 
+        race_performance.driverId,
+        elo_dri.elo,
+        race_performance.headToHead as R,
+        -- Odds of winning: pow(10, (elo_dri.elo - elo_opp.elo)
+        -- Probability of the expected outcome: odds / (odds + 1)
+        pow(10, (elo_dri.elo - elo_opp.elo) / 400) / (pow(10, (elo_dri.elo - elo_opp.elo) / 400) + 1) as E,
+    from race_performance
+        left join elo as elo_dri on elo_dri.driverId = race_performance.driverId 
+            and elo_dri.raceId = race_performance.raceId 
+        left join elo as elo_opp on elo_opp.driverId = race_performance.opponentId 
+            and elo_opp.raceId = race_performance.raceId 
+    order by race_performance.raceId, race_performance.driverId
+),
+elo_sum as (
+    select
+        raceId,
+        year,
+        round,
+        driverId,
+        sum(R)::float as R,
+        sum(E)::float as E,
+        -- K * (Result - Expected)
+        1::float * (sum(R)::float - sum(E)::float) as change,
+        elo as driverElo
+    from elo_setup
+    group by all
+)
+select 
+    raceId, year, round, driverId, R, E, driverElo as elo, change as elo_change, driverElo + change as new_elo,
+from elo_sum 
+group by all 
+order by year, round, driverId
 ;
 '''
 
