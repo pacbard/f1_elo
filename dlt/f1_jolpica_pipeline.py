@@ -42,7 +42,7 @@ def f1_data_source(access_token: Optional[str] = dlt.secrets.value) -> Any:
                 "endpoint": {
                     "path": "drivers",
                     "paginator": OffsetPaginator(
-                        limit=30,
+                        limit=500,
                         total_path="MRData.total"
                     )
                 },
@@ -53,7 +53,7 @@ def f1_data_source(access_token: Optional[str] = dlt.secrets.value) -> Any:
                 "endpoint": {
                     "path": "races",
                     "paginator": OffsetPaginator(
-                        limit=30,
+                        limit=500,
                         total_path="MRData.total"
                     )
                 },
@@ -62,25 +62,43 @@ def f1_data_source(access_token: Optional[str] = dlt.secrets.value) -> Any:
                 "name": "results",
                 "primary_key": ["season", "round"],
                 "endpoint": {
-                    "path": "{season}/{round}/results",
+                    "path": "{season}/results",
                     "params": {
                         "season": {
                             "type": "resolve",
-                            "resource": "races",
+                            "resource": "seasons",
                             "field": "season",
-                        },
-                        "round": {
-                            "type": "resolve",
-                            "resource": "races",
-                            "field": "round",
                         },
                     },
                     "paginator": OffsetPaginator(
-                        limit=30,
+                        limit=1000,
                         total_path="MRData.total"
                     )
                 },
             },
+            # {
+            #     "name": "results",
+            #     "primary_key": ["season", "round"],
+            #     "endpoint": {
+            #         "path": "{season}/{round}/results",
+            #         "params": {
+            #             "season": {
+            #                 "type": "resolve",
+            #                 "resource": "races",
+            #                 "field": "season",
+            #             },
+            #             "round": {
+            #                 "type": "resolve",
+            #                 "resource": "races",
+            #                 "field": "round",
+            #             },
+            #         },
+            #         "paginator": OffsetPaginator(
+            #             limit=30,
+            #             total_path="MRData.total"
+            #         )
+            #     },
+            # },
         ],
     }
 
