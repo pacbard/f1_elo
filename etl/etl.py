@@ -20,8 +20,6 @@ def create_database_from_csv_folder(conn, folder_path, db_path):
       except Exception as e:
         print(f"Error creating table '{table_name}' from '{filepath}': {e}")
 
-
-# Example usage:
 folder_path = "data"  # Replace with the actual folder path
 db_path = "f1_results.duckdb"
 
