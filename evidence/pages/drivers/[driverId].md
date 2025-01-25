@@ -68,4 +68,13 @@ from ${timeline}
   chartAreaHeight=500
   yMin={chart[0].yMin}
   yMax={chart[0].yMax}
+  echartsOptions={{
+      dataZoom: {
+          show: true,
+          bottom: 10
+      },
+      grid: {
+          bottom: 50
+      }
+  }}
 />

@@ -87,5 +87,14 @@ where
   chartAreaHeight=500
   yMin=850
   yMax=1500
+  echartsOptions={{
+      dataZoom: {
+          show: true,
+          bottom: 10
+      },
+      grid: {
+          bottom: 50
+      }
+  }}
 />
 
