@@ -42,14 +42,8 @@ from ${driver}
   value=min_elo
 />
 
-```sql year_filter
-select distinct year from ${driver}
-```
-
-<Dropdown multiple=true selectAllByDefault=true data={year_filter} name=year_filter value=year/>
-
 ```sql timeline
-select * from ${driver} where year in ${inputs.year_filter.value}
+select * from ${driver} 
 ```
 
 ```sql chart
