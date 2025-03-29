@@ -59,6 +59,9 @@ select * from f1db.driver;
 create or replace table race as
 select * from f1db.race;
 
+create or replace table grand_prix as
+select * from f1db.grand_prix;
+
 create or replace table constructor as
 select * from f1db.constructor;
 
