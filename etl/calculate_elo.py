@@ -11,7 +11,8 @@ def calculate_new_elo(conn):
   result = conn.execute("""
       SELECT DISTINCT 
         year, round 
-      FROM races
+      FROM elo
+      where elo is null
       order by year, round
   """).fetchall()
 
@@ -28,8 +29,8 @@ def calculate_new_elo(conn):
             E = elo_calc.E
     from elo_calc
     where
-        elo.driverId = elo_calc.driverId
-        and elo.raceId = elo_calc.raceId
+        elo.driver_id = elo_calc.driver_id
+        and elo.race_id = elo_calc.race_id
         and elo.year = {year} and elo.round = {round_num};
     """
 

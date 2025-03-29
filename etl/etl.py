@@ -1,121 +1,158 @@
 import duckdb
-import os
 
-def create_database_from_csv_folder(conn, folder_path, db_path):
-  """
-  Creates a DuckDB database with tables from all CSV files in a given folder.
+def download_and_unzip(url, extract_path="."):
+    """
+    Downloads a zip file to a temporary location, extracts its contents, and then deletes the zip file.
 
-  Args:
-    folder_path: Path to the folder containing CSV files.
-    db_path: Path to the output DuckDB database file.
-  """
+    Args:
+        url (str): The URL of the zip file.
+        extract_path (str, optional): The path to extract the zip file to. Defaults to the current directory.
+    """
+    import requests
+    import zipfile
+    import io
+    import tempfile
+    import os
 
-  for filename in os.listdir(folder_path):
-    if filename.endswith(".csv"):
-      filepath = os.path.join(folder_path, filename)
-      table_name = filename.replace(".csv", "")  # Use filename as table name
-      try:
-        conn.execute(f"CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM read_csv('{filepath}', nullstr='\\N');")
-        print(f"Table '{table_name}' created successfully from '{filepath}'.")
-      except Exception as e:
-        print(f"Error creating table '{table_name}' from '{filepath}': {e}")
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
 
-folder_path = "data"  # Replace with the actual folder path
+        with tempfile.NamedTemporaryFile(delete=False) as temp_zip: #create temporary file
+            for chunk in response.iter_content(chunk_size=8192):
+                temp_zip.write(chunk)
+            temp_zip_path = temp_zip.name
+
+        with zipfile.ZipFile(temp_zip_path) as zf:
+            zf.extractall(extract_path)
+
+        os.remove(temp_zip_path)  # Delete the temporary zip file
+
+        print(f"Successfully downloaded and extracted from {url} to {extract_path}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error downloading the file: {e}")
+    except zipfile.BadZipFile:
+        print("Error: The downloaded file is not a valid zip file.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+# Download and unzip the SQLite database
+db_version = "v2025.2.0"
+
+url = f"https://github.com/f1db/f1db/releases/download/{db_version}/f1db-sqlite.zip"
+
+download_and_unzip(url, extract_path=".")
+
 db_path = "f1_results.duckdb"
 
-conn = duckdb.connect(database=db_path)
+conn = duckdb.connect(db_path)
 
-create_database_from_csv_folder(conn, folder_path, db_path)
+create_query = f"""
+attach 'f1db.db' as f1db (type sqlite, READ_ONLY);
 
-create_query = '''
+-- Copy over the tables from the SQLite database
+create or replace table driver as
+select * from f1db.driver;
+
+create or replace table race as
+select * from f1db.race;
+
+create or replace table constructor as
+select * from f1db.constructor;
+
+create or replace table race_result as
+select * from f1db.race_result;
+
 -- Create Elo Table
 create or replace table elo as
-select distinct
-  driverId,
-  results.raceId,
-  year,
-  round,
-  NULL::float as elo_change,
-  NULL::float as elo,
-  NULL::float as R, NULL::float as E
-from results
-  join races on races.raceId = results.raceId
-order by driverId, year, round
+select 
+	race_result.driver_id, 
+	race_result.race_id,
+	race.year,
+	race.round,
+	NULL::float as elo_change,
+	NULL::float as elo,
+	NULL::float as R, 
+	NULL::float as E
+from race_result
+	join race on race.id = race_result.race_id
+order by driver_id, year, round
 ;
 
 create or replace view elo_calc as
 WITH
 res as (
     select
-        results.raceId,
-        races.year,
-        races.round,
-        races.name,
-        drivers.driverId,
-        drivers.driverRef,
+        race_result.race_id,
+        race.year,
+        race.round,
+        race.official_name as race_name,
+        driver.id as driver_id,
+        driver.abbreviation as driver_ref,
         case
-            when position is null then 99999
-            else position::int 
+            when race_result.position_number is null then 99999
+            else race_result.position_number::int 
         end as position,
-        constructors.constructorRef,
-    from results
-        join races on races.raceId = results.raceId
-        join drivers on drivers.driverId = results.driverId
-        join constructors on constructors.constructorId = results.constructorId
+        constructor.name as constructor_name,
+    from race_result
+        join race on race.id = race_result.race_id
+        join driver on driver.id = race_result.driver_id
+        join constructor on constructor.id = race_result.constructor_id
 ),
 race_performance as (
     select
-        res.driverId,
-        res.raceId,
+        res.driver_id,
+        res.race_id,
         res.year,
         res.round,
         res.position,
-        res2.driverId as opponentId,
+        res2.driver_id as opponentId,
         res2.position as opponentPosition,
         case
             when res.position::int < res2.position::int then 1
             when res.position::int = res2.position::int then 0.5
             when res.position::int > res2.position::int then 0
         end as headToHead,
-        count(distinct res2.driverId) as nOpponents
+        count(distinct res2.driver_id) as nOpponents
     from res
-    join res as res2 on res2.raceId = res.raceId 
-        and res2.driverId != res.driverId
+    join res as res2 on res2.race_id = res.race_id 
+        and res2.driver_id != res.driver_id
     group by all
 ),
 elo_start as (
     select
-        driverId,
-        raceId,
+        driver_id,
+        race_id,
         year,
         round,
-        coalesce(lag(elo, 1) over (partition by driverId order by year, round), 1000) as elo,
+        coalesce(lag(elo, 1) over (partition by driver_id order by year, round), 1000) as elo,
     from elo
 ),
 elo_setup as (
     select 
-        race_performance.raceId, 
+        race_performance.race_id, 
         race_performance.year, 
         race_performance.round, 
-        race_performance.driverId,
+        race_performance.driver_id,
         elo_dri.elo,
         race_performance.headToHead as R,
         -- Odds of winning: pow(10, (elo_dri.elo - elo_opp.elo)
         -- Probability of the expected outcome: odds / (odds + 1)
         pow(10, (elo_dri.elo - elo_opp.elo) / 400) / (pow(10, (elo_dri.elo - elo_opp.elo) / 400) + 1) as E,
     from race_performance
-        left join elo_start as elo_dri on elo_dri.driverId = race_performance.driverId
-            and elo_dri.raceId = race_performance.raceId
-        left join elo_start as elo_opp on elo_opp.driverId = race_performance.opponentId
-            and elo_opp.raceId = race_performance.raceId
-    order by race_performance.raceId, race_performance.driverId
+        left join elo_start as elo_dri on elo_dri.driver_id = race_performance.driver_id
+            and elo_dri.race_id = race_performance.race_id
+        left join elo_start as elo_opp on elo_opp.driver_id = race_performance.opponentId
+            and elo_opp.race_id = race_performance.race_id
+    order by race_performance.race_id, race_performance.driver_id
 ),
 elo_sum as (
     select
-        raceId,
+        race_id,
         year,
         round,
-        driverId,
+        driver_id,
         sum(R)::float as R,
         sum(E)::float as E,
         -- K * (Result - Expected)
@@ -125,12 +162,12 @@ elo_sum as (
     group by all
 )
 select 
-    raceId, year, round, driverId, R, E, driverElo as elo, change as elo_change, driverElo + change as new_elo,
+    race_id, year, round, driver_id, R, E, driverElo as elo, change as elo_change, driverElo + change as new_elo,
 from elo_sum 
 group by all 
-order by year, round, driverId
+order by year, round, driver_id
 ;
-'''
+"""
 
 conn.execute(create_query)
 
