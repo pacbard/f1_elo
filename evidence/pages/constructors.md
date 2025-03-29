@@ -7,7 +7,7 @@ select
   elo_constructor.elo as max_elo, 
   race.short_name as race_name,
   race.date as race_date,
-  '/constr/' || constructor.id as constructor_link
+  '/team/' || constructor.id as constructor_link
 from f1_results.constructor
   join f1_results.elo_constructor on elo_constructor.constructor_id = constructor.id
   join f1_results.race on race.id = elo_constructor.race_id
@@ -24,7 +24,7 @@ order by max_elo desc
 
 # Change over Time 📈
 
-<Dropdown data={goat} name=constructor_filter value=id label=constructor_name multiple=true defaultValue={['Ferrari', 'Mercedes', 'Red Bull']}/>
+<Dropdown data={goat} name=constructor_filter value=id label=constructor_name multiple=true defaultValue={['ferrari', 'mercedes', 'red-bull']}/>
 
 ```sql timeline
 select
