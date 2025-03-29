@@ -1,2 +1,5 @@
-f1_results.duckdb
-f1_results.duckdb.wal
+*.duckdb
+*.db
+*.wal
+*.db-wal
+*.db-shm
