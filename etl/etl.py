@@ -44,7 +44,7 @@ url = f"https://github.com/f1db/f1db/releases/download/{db_version}/f1db-sqlite.
 
 download_and_unzip(url, extract_path=".")
 
-db_path = "f1_results.duckdb"
+db_path = "f1db_local.duckdb"
 
 conn = duckdb.connect(db_path)
 

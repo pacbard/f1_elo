@@ -37,6 +37,6 @@ def calculate_new_elo(conn):
     conn.sql(update_query)
 
 # Example usage:
-conn = duckdb.connect(database="f1_results.duckdb") 
+conn = duckdb.connect(database="f1db_local.duckdb") 
 calculate_new_elo(conn)
 conn.close()

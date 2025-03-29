@@ -3,7 +3,7 @@ import duckdb
 conn = duckdb.connect('md:F1_Results')
 
 conn.execute("""
-attach 'f1_results.duckdb' as f1_local;
+attach 'f1db_local.duckdb' as f1_local;
 
 use F1_Results;
 
