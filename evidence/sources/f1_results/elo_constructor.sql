@@ -1,0 +1,1 @@
+select * from elo_constructor;

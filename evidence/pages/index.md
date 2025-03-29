@@ -25,14 +25,14 @@ ATTACH 'md:_share/F1_Results/2c252e3d-f9a1-4ab1-93e1-328d84b6347b';
 select
   driver.*,
   driver.name as driver_name,
-  elo.elo as max_elo, 
+  elo_driver.elo as max_elo, 
   race.short_name as race_name,
   race.date as race_date,
   '/driver/' || driver.id as driver_link
 from f1_results.driver
-  join f1_results.elo on elo.driver_id = driver.id
-  join f1_results.race on race.id = elo.race_id
-qualify row_number() OVER (partition by elo.driver_id ORDER BY elo.elo DESC) = 1; 
+  join f1_results.elo_driver on elo_driver.driver_id = driver.id
+  join f1_results.race on race.id = elo_driver.race_id
+qualify row_number() OVER (partition by elo_driver.driver_id ORDER BY elo_driver.elo DESC) = 1; 
 order by max_elo desc
 ```
 
@@ -50,17 +50,17 @@ order by max_elo desc
 
 ```sql timeline
 select
-  row_number() over (order by elo.year, elo.round) as race_order,
-  elo.year,
-  elo.round,
+  row_number() over (order by elo_driver.year, elo_driver.round) as race_order,
+  elo_driver.year,
+  elo_driver.round,
   race.date,
   race.official_name,
-  elo.driver_id,
-  elo.elo,
+  elo_driver.driver_id,
+  elo_driver.elo,
   driver.name as driver_name,
 from f1_results.driver
-  join f1_results.elo on driver.id = elo.driver_id
-  join f1_results.race on race.id = elo.race_id
+  join f1_results.elo_driver on driver.id = elo_driver.driver_id
+  join f1_results.race on race.id = elo_driver.race_id
 where
   driver.id in ${inputs.driver_filter.value}
 ```
