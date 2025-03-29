@@ -174,7 +174,7 @@ order by year, round, driver_id
 
 -- Create Elo Constructor Table
 create or replace table elo_constructor as
-select 
+select distinct
 	race_result.constructor_id, 
 	race_result.race_id,
 	race.year,
@@ -274,7 +274,7 @@ elo_sum as (
         sum(R)::float as R,
         sum(E)::float as E,
         -- K * (Result - Expected)
-        1::float * (sum(R)::float - sum(E)::float) as change,
+        15::float * (sum(R)::float - sum(E)::float) as change,
         elo as constructorElo
     from elo_setup
     group by all
