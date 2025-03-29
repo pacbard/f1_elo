@@ -26,7 +26,7 @@ select
   driver.*,
   driver.name as driver_name,
   elo.elo as max_elo, 
-  race.official_name as race_name,
+  race.short_name as race_name,
   race.date as race_date,
   '/driver/' || driver.id as driver_link
 from f1_results.driver

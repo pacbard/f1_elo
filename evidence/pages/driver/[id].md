@@ -7,10 +7,13 @@ select
   elo.round,
   race.date,
   race.official_name,
+  race.short_name,
   race.grand_prix_id,
   elo.driver_id,
   elo.elo,
   elo.elo_change,
+  elo.R,
+  elo.E,
   from f1_results.driver
   join f1_results.elo on driver.id = elo.driver_id
   join f1_results.race on race.id = elo.race_id
@@ -69,7 +72,7 @@ from ${timeline}
 />
 
 <DataTable data={driver}>
-  <Column id=official_name/>
+  <Column id=short_name/>
   <Column id=year/>
   <Column id=round/>
   <Column id=elo/>
