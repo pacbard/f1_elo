@@ -75,13 +75,14 @@ select
 	race_result.race_id,
 	race.year,
 	race.round,
-	NULL as elo_change,
-	NULL as elo,
-	NULL as R, 
-	NULL as E
+	md_elo.elo_change as elo_change,
+	md_elo.elo as elo,
+	md_elo.R as R, 
+	md_elo.E as E
 from race_result
+    join F1_Results.elo_driver as md_elo on md_elo.driver_id = race_result.driver_id and md_elo.race_id = race_result.race_id
 	join race on race.id = race_result.race_id
-order by driver_id, year, round
+order by race_result.driver_id, race.year, race.round
 ;
 
 create or replace view elo_driver_calc as
@@ -174,18 +175,19 @@ order by year, round, driver_id
 
 -- Create Elo Constructor Table
 create or replace table elo_constructor as
-select distinct
+select 
 	race_result.constructor_id, 
 	race_result.race_id,
 	race.year,
 	race.round,
-	NULL as elo_change,
-	NULL as elo,
-	NULL as R, 
-	NULL as E
+	md_elo.elo_change as elo_change,
+	md_elo.elo as elo,
+	md_elo.R as R, 
+	md_elo.E as E
 from race_result
+    join F1_Results.elo_constructor as md_elo on md_elo.constructor_id = race_result.constructor_id and md_elo.race_id = race_result.race_id
 	join race on race.id = race_result.race_id
-order by constructor_id, year, round
+order by race_result.constructor_id, race.year, race.round
 ;
 
 create or replace view elo_constructor_calc as
