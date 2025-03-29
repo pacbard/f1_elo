@@ -7,14 +7,16 @@ select
   elo.round,
   races.date,
   races.official_name,
+  races.grand_prix_id,
   elo.driver_id,
   elo.elo,
+  elo.elo_change,
   from f1_results.drivers
   join f1_results.elo on drivers.id = elo.driver_id
   join f1_results.races on races.id = elo.race_id
 where
     drivers.id = '${params.id}'
-order by races.year, races.round desc
+order by races.year desc, races.round desc
 ```
 
 # Stats for <Value data={driver} column=driver_name/>
@@ -65,3 +67,11 @@ from ${timeline}
       }
   }}
 />
+
+<DataTable data={driver}>
+  <Column id=official_name/>
+  <Column id=year/>
+  <Column id=round/>
+  <Column id=elo/>
+  <Column id=elo_change contentType=delta/>
+</DataTable>
