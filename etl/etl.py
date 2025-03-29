@@ -68,12 +68,8 @@ select * from f1db.constructor;
 create or replace table race_result as
 select * from f1db.race_result;
 
--- Create Elo Table
-create or replace table elo as
-select
-    *
-from F1_Results.elo
-union
+-- Create Elo Driver Table
+create or replace table elo_driver as
 select 
 	race_result.driver_id, 
 	race_result.race_id,
@@ -85,11 +81,10 @@ select
 	NULL as E
 from race_result
 	join race on race.id = race_result.race_id
-where not exists (select 1 from F1_Results.race as md_race where md_race.id = race.id)
 order by driver_id, year, round
 ;
 
-create or replace view elo_calc as
+create or replace view elo_driver_calc as
 WITH
 res as (
     select
@@ -100,7 +95,7 @@ res as (
         driver.id as driver_id,
         driver.abbreviation as driver_ref,
         case
-            when race_result.position_number is null then 99999
+            when race_result.position_number is null then (select max(rr.position_number) from race_result as rr where rr.race_id = race.id) + 1
             else race_result.position_number::int 
         end as position,
         constructor.name as constructor_name,
@@ -136,7 +131,7 @@ elo_start as (
         year,
         round,
         coalesce(lag(elo, 1) over (partition by driver_id order by year, round), 1000) as elo,
-    from elo
+    from elo_driver
 ),
 elo_setup as (
     select 
@@ -175,6 +170,120 @@ select
 from elo_sum 
 group by all 
 order by year, round, driver_id
+;
+
+-- Create Elo Constructor Table
+create or replace table elo_constructor as
+select 
+	race_result.constructor_id, 
+	race_result.race_id,
+	race.year,
+	race.round,
+	NULL as elo_change,
+	NULL as elo,
+	NULL as R, 
+	NULL as E
+from race_result
+	join race on race.id = race_result.race_id
+order by constructor_id, year, round
+;
+
+create or replace view elo_constructor_calc as
+WITH
+res_long as (
+    select
+        race_result.race_id,
+        race.year,
+        race.round,
+        race.official_name as race_name,
+        constructor.id as constructor_id,
+        case
+            when race_result.position_number is null then (select max(rr.position_number) from race_result as rr where rr.race_id = race.id) + 1
+            else race_result.position_number::int 
+        end as position,
+        constructor.name as constructor_name,
+    from race_result
+        join race on race.id = race_result.race_id
+        join constructor on constructor.id = race_result.constructor_id
+),
+res as (
+    select
+        race_id,
+        year,
+        round,
+        race_name,
+        constructor_id,
+        avg(position) as position,
+        constructor_name,
+    from res_long
+    group by all
+),
+race_performance as (
+    select
+        res.constructor_id,
+        res.race_id,
+        res.year,
+        res.round,
+        res.position,
+        res2.constructor_id as opponentId,
+        res2.position as opponentPosition,
+        case
+            when res.position::int < res2.position::int then 1
+            when res.position::int = res2.position::int then 0.5
+            when res.position::int > res2.position::int then 0
+        end as headToHead,
+        count(distinct res2.constructor_id) as nOpponents
+    from res
+    join res as res2 on res2.race_id = res.race_id 
+        and res2.constructor_id != res.constructor_id
+    group by all
+),
+elo_start as (
+    select
+        constructor_id,
+        race_id,
+        year,
+        round,
+        coalesce(lag(elo, 1) over (partition by constructor_id order by year, round), 1000) as elo,
+    from elo_constructor
+),
+elo_setup as (
+    select 
+        race_performance.race_id, 
+        race_performance.year, 
+        race_performance.round, 
+        race_performance.constructor_id,
+        elo_cons.elo,
+        race_performance.headToHead as R,
+        -- Odds of winning: pow(10, (elo_cons.elo - elo_opp.elo)
+        -- Probability of the expected outcome: odds / (odds + 1)
+        pow(10, (elo_cons.elo - elo_opp.elo) / 400) / (pow(10, (elo_cons.elo - elo_opp.elo) / 400) + 1) as E,
+    from race_performance
+        left join elo_start as elo_cons on elo_cons.constructor_id = race_performance.constructor_id
+            and elo_cons.race_id = race_performance.race_id
+        left join elo_start as elo_opp on elo_opp.constructor_id = race_performance.opponentId
+            and elo_opp.race_id = race_performance.race_id
+    order by race_performance.race_id, race_performance.constructor_id
+),
+elo_sum as (
+    select
+        race_id,
+        year,
+        round,
+        constructor_id,
+        sum(R)::float as R,
+        sum(E)::float as E,
+        -- K * (Result - Expected)
+        1::float * (sum(R)::float - sum(E)::float) as change,
+        elo as constructorElo
+    from elo_setup
+    group by all
+)
+select 
+    race_id, year, round, constructor_id, R, E, constructorElo as elo, change as elo_change, constructorElo + change as new_elo,
+from elo_sum 
+group by all 
+order by year, round, constructor_id
 ;
 """
 
