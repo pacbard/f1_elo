@@ -23,15 +23,15 @@ ATTACH 'md:_share/F1_Results/2c252e3d-f9a1-4ab1-93e1-328d84b6347b';
 
 ```sql goat
 select
-  drivers.*,
-  drivers.name as driver_name,
+  driver.*,
+  driver.name as driver_name,
   elo.elo as max_elo, 
-  races.official_name as race_name,
-  races.date as race_date,
-  '/driver/' || drivers.id as driver_link
-from f1_results.drivers
-  join f1_results.elo on elo.driver_id = drivers.id
-  join f1_results.races on races.id = elo.race_id
+  race.official_name as race_name,
+  race.date as race_date,
+  '/driver/' || driver.id as driver_link
+from f1_results.driver
+  join f1_results.elo on elo.driver_id = driver.id
+  join f1_results.race on race.id = elo.race_id
 qualify row_number() OVER (partition by elo.driver_id ORDER BY elo.elo DESC) = 1; 
 order by max_elo desc
 ```
@@ -53,16 +53,16 @@ select
   row_number() over (order by elo.year, elo.round) as race_order,
   elo.year,
   elo.round,
-  races.date,
-  races.official_name,
+  race.date,
+  race.official_name,
   elo.driver_id,
   elo.elo,
-  drivers.name as driver_name,
-from f1_results.drivers
-  join f1_results.elo on drivers.id = elo.driver_id
-  join f1_results.races on races.id = elo.race_id
+  driver.name as driver_name,
+from f1_results.driver
+  join f1_results.elo on driver.id = elo.driver_id
+  join f1_results.race on race.id = elo.race_id
 where
-  drivers.id in ${inputs.driver_filter.value}
+  driver.id in ${inputs.driver_filter.value}
 ```
 
 <LineChart

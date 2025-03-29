@@ -1,22 +1,22 @@
 ```sql driver
 select
-  drivers.*,
-  drivers.name as driver_name,
+  driver.*,
+  driver.name as driver_name,
   row_number() over (order by elo.year, elo.round) as race_order,
   elo.year,
   elo.round,
-  races.date,
-  races.official_name,
-  races.grand_prix_id,
+  race.date,
+  race.official_name,
+  race.grand_prix_id,
   elo.driver_id,
   elo.elo,
   elo.elo_change,
-  from f1_results.drivers
-  join f1_results.elo on drivers.id = elo.driver_id
-  join f1_results.races on races.id = elo.race_id
+  from f1_results.driver
+  join f1_results.elo on driver.id = elo.driver_id
+  join f1_results.race on race.id = elo.race_id
 where
-    drivers.id = '${params.id}'
-order by races.year desc, races.round desc
+    driver.id = '${params.id}'
+order by race.year desc, race.round desc
 ```
 
 # Stats for <Value data={driver} column=driver_name/>
