@@ -38,5 +38,6 @@ def calculate_new_elo(conn):
 
 # Example usage:
 conn = duckdb.connect(database="f1db_local.duckdb") 
+print("Calculating ELO for new races")
 calculate_new_elo(conn)
 conn.close()

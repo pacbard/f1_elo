@@ -2,6 +2,7 @@ import duckdb
 
 conn = duckdb.connect('md:F1_Results')
 
+print("Update MotherDuck database with new data")
 conn.execute("""
 attach 'f1db_local.duckdb' as f1_local;
 

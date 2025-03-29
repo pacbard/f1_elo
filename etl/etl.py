@@ -175,6 +175,7 @@ order by year, round, driver_id
 ;
 """
 
+print("Updating the local database")
 conn.execute(create_query)
 
 conn.close()
