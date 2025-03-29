@@ -1,26 +1,19 @@
 ```sql driver
 select
   drivers.*,
-  case
-    when code is not null then surname || ', ' || forename
-    else surname || ', ' || left(forename, 1)
-  end as driver_name,
+  drivers.name as driver_name,
   row_number() over (order by elo.year, elo.round) as race_order,
   elo.year,
   elo.round,
   races.date,
-  races.name,
-  elo.driverId,
+  races.official_name,
+  elo.driver_id,
   elo.elo,
-  case
-    when code is not null then surname || ', ' || forename
-    else surname || ', ' || forename
-  end as driver_name,
-from f1_results.drivers
-  join f1_results.elo on elo.driverId = drivers.driverId
-  join f1_results.races on races.raceId = elo.raceId
+  from f1_results.drivers
+  join f1_results.elo on drivers.id = elo.driver_id
+  join f1_results.races on races.id = elo.race_id
 where
-    drivers.driverId = ${params.driverId}
+    drivers.id = '${params.id}'
 order by races.year, races.round desc
 ```
 

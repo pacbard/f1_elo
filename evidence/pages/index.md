@@ -24,35 +24,29 @@ ATTACH 'md:_share/F1_Results/2c252e3d-f9a1-4ab1-93e1-328d84b6347b';
 ```sql goat
 select
   drivers.*,
-  case
-    when code is not null then surname || ', ' || forename
-    else surname || ', ' || left(forename, 1)
-  end as driver_name,
+  drivers.name as driver_name,
   elo.elo as max_elo, 
-  races.name as race_name,
+  races.official_name as race_name,
   races.date as race_date,
-  races.url as race_url,
-  '/drivers/' || drivers.driverId::int as driver_link
+  '/driver/' || drivers.id as driver_link
 from f1_results.drivers
-  join f1_results.elo on elo.driverId = drivers.driverId
-  join f1_results.races on races.raceId = elo.raceId
-qualify row_number() OVER (partition by elo.driverId ORDER BY elo.elo DESC) = 1; 
+  join f1_results.elo on elo.driver_id = drivers.id
+  join f1_results.races on races.id = elo.race_id
+qualify row_number() OVER (partition by elo.driver_id ORDER BY elo.elo DESC) = 1; 
 order by max_elo desc
 ```
 
 <DataTable data={goat} wrapTitles=true link=driver_link>
-  <Column id=surname/>
-  <Column id=forename/>
+  <Column id=last_name/>
+  <Column id=first_name/>
   <Column id=max_elo/>
   <Column id=race_name/>
   <Column id=race_date/>
-  <Column id=url contentType=link title="Wiki" linkLabel="Driver →" />
-  <Column id=race_url contentType=link title="Wiki" linkLabel="Race →"/>
 </DataTable>
 
 # Change over Time 📈
 
-<Dropdown data={goat} name=driver_filter value=driverId label=driver_name multiple=true defaultValue={[1, 830, 3]}/>
+<Dropdown data={goat} name=driver_filter value=id label=driver_name multiple=true defaultValue={['lewis-hamilton', 'max-verstappen']}/>
 
 ```sql timeline
 select
@@ -60,18 +54,15 @@ select
   elo.year,
   elo.round,
   races.date,
-  races.name,
-  elo.driverId,
+  races.official_name,
+  elo.driver_id,
   elo.elo,
-  case
-    when code is not null then surname || ', ' || forename
-    else surname || ', ' || forename
-  end as driver_name,
+  drivers.name as driver_name,
 from f1_results.drivers
-  join f1_results.elo on elo.driverId = drivers.driverId
-  join f1_results.races on races.raceId = elo.raceId
+  join f1_results.elo on drivers.id = elo.driver_id
+  join f1_results.races on races.id = elo.race_id
 where
-  drivers.driverId in ${inputs.driver_filter.value}
+  drivers.id in ${inputs.driver_filter.value}
 ```
 
 <LineChart

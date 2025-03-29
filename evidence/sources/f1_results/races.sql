@@ -1,1 +1,1 @@
-select * from races
+select * from race

@@ -1,1 +1,1 @@
-select * from drivers;
+select * from driver;
