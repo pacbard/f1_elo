@@ -50,6 +50,7 @@ conn = duckdb.connect(db_path)
 
 create_query = f"""
 attach 'f1db.db' as f1db (type sqlite, READ_ONLY);
+attach 'md:F1_Results' as F1_Results;
 
 -- Copy over the tables from the SQLite database
 create or replace table driver as
@@ -66,17 +67,22 @@ select * from f1db.race_result;
 
 -- Create Elo Table
 create or replace table elo as
+select
+    *
+from F1_Results.elo
+union
 select 
 	race_result.driver_id, 
 	race_result.race_id,
 	race.year,
 	race.round,
-	NULL::float as elo_change,
-	NULL::float as elo,
-	NULL::float as R, 
-	NULL::float as E
+	NULL as elo_change,
+	NULL as elo,
+	NULL as R, 
+	NULL as E
 from race_result
 	join race on race.id = race_result.race_id
+where not exists (select 1 from F1_Results.race as md_race where md_race.id = race.id)
 order by driver_id, year, round
 ;
 
