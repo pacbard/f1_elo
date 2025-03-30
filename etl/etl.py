@@ -80,7 +80,7 @@ select
 	md_elo.R as R, 
 	md_elo.E as E
 from race_result
-    join F1_Results.elo_driver as md_elo on md_elo.driver_id = race_result.driver_id and md_elo.race_id = race_result.race_id
+    left join F1_Results.elo_driver as md_elo on md_elo.driver_id = race_result.driver_id and md_elo.race_id = race_result.race_id
 	join race on race.id = race_result.race_id
 order by race_result.driver_id, race.year, race.round
 ;
@@ -185,7 +185,7 @@ select
 	md_elo.R as R, 
 	md_elo.E as E
 from race_result
-    join F1_Results.elo_constructor as md_elo on md_elo.constructor_id = race_result.constructor_id and md_elo.race_id = race_result.race_id
+    left join F1_Results.elo_constructor as md_elo on md_elo.constructor_id = race_result.constructor_id and md_elo.race_id = race_result.race_id
 	join race on race.id = race_result.race_id
 order by race_result.constructor_id, race.year, race.round
 ;
