@@ -28,7 +28,8 @@ select
   elo_driver.elo as max_elo, 
   race.short_name as race_name,
   race.date as race_date,
-  '/driver/' || driver.id as driver_link
+  '/driver/' || driver.id as driver_link,
+  '/race/' || race.year::int || '/' || race.round::int as race_link
 from f1_results.driver
   join f1_results.elo_driver on elo_driver.driver_id = driver.id
   join f1_results.race on race.id = elo_driver.race_id
@@ -42,6 +43,7 @@ order by max_elo desc
   <Column id=max_elo/>
   <Column id=race_name/>
   <Column id=race_date/>
+  <Column id=race_link contentType=link linkLabel="Race Details" />
 </DataTable>
 
 # Change over Time 📈

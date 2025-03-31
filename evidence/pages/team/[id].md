@@ -14,6 +14,7 @@ select
   elo_constructor.elo_change,
   elo_constructor.R,
   elo_constructor.E,
+  '/race/' || race.year::int || '/' || race.round::int as race_link
   from f1_results.constructor
   join f1_results.elo_constructor on constructor.id = elo_constructor.constructor_id
   join f1_results.race on race.id = elo_constructor.race_id
@@ -77,4 +78,5 @@ from ${timeline}
   <Column id=round/>
   <Column id=elo/>
   <Column id=elo_change contentType=delta/>
+  <Column id=race_link contentType=link linkLabel="Race Details"/>
 </DataTable>

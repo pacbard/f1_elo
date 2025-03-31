@@ -15,7 +15,7 @@ select
   elo.R,
   elo.E,
   from f1_results.driver
-  join f1_results.elo on driver.id = elo.driver_id
+  join f1_results.elo_driver as elo on driver.id = elo.driver_id
   join f1_results.race on race.id = elo.race_id
 where
     driver.id = '${params.id}'
