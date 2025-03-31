@@ -78,10 +78,10 @@ select
 	race_result.race_id,
 	race.year,
 	race.round,
-	md_elo.elo_change as elo_change,
-	md_elo.elo as elo,
-	md_elo.R as R, 
-	md_elo.E as E
+	md_elo.elo_change::float as elo_change,
+	md_elo.elo::float as elo,
+	md_elo.R::float as R, 
+	md_elo.E::float as E
 from race_result
     left join F1_Results.elo_driver as md_elo on md_elo.driver_id = race_result.driver_id and md_elo.race_id = race_result.race_id
 	join race on race.id = race_result.race_id
@@ -183,10 +183,10 @@ select
 	race_result.race_id,
 	race.year,
 	race.round,
-	md_elo.elo_change as elo_change,
-	md_elo.elo as elo,
-	md_elo.R as R, 
-	md_elo.E as E
+	md_elo.elo_change::float as elo_change,
+	md_elo.elo::float as elo,
+	md_elo.R::float as R, 
+	md_elo.E::float as E
 from race_result
     left join F1_Results.elo_constructor as md_elo on md_elo.constructor_id = race_result.constructor_id and md_elo.race_id = race_result.race_id
 	join race on race.id = race_result.race_id
