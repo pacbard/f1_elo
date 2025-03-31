@@ -126,6 +126,8 @@ res as (
         join race on race.id = race_result.race_id
         join driver on driver.id = race_result.driver_id
         join constructor on constructor.id = race_result.constructor_id
+    where
+        race_result.shared_car = 0
 ),
 race_performance as (
     select
@@ -191,7 +193,7 @@ elo_setup as (
             and elo_copp.race_id = race_performance.race_id
     order by race_performance.race_id, race_performance.driver_id
 ),
-elo_sum as (
+elo_summary as (
     select
         race_id,
         year,
@@ -205,7 +207,7 @@ elo_sum as (
         constructor_elo,
         -- K * (Result - Expected)
         1::float * (sum(R)::float - sum(E_driver)::float) as driver_change,
-        1::float * (sum(R)::float - sum(E_constructor)::float) as constructor_change,
+        0.5::float * (sum(R)::float - sum(E_constructor)::float) as constructor_change,
     from elo_setup
     group by all
 )
@@ -214,7 +216,7 @@ select
     R,
     E_driver, driver_elo, driver_change, driver_elo + driver_change as new_driver_elo,
     E_constructor, constructor_elo, constructor_change, constructor_elo + constructor_change as new_constructor_elo,
-from elo_sum
+from elo_summary
 group by all
 order by year, round, driver_id
 ;
