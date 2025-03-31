@@ -11,8 +11,9 @@ select
     *,
     elo_driver.R as position,
     elo_driver.E as expected
-from elo_driver
-    join elo_constructor on elo_constructor.race_id = elo_driver.race_id and elo_constructor.constructor_id = elo_driver.constructor_id
+from race_result
+    join elo_driver on elo_driver.race_id = race_result.race_id and elo_driver.driver_id = race_result.driver_id
+    join elo_constructor on elo_constructor.race_id = race_result.race_id and elo_constructor.constructor_id = race_result.constructor_id
     join driver on driver.id = elo_driver.driver_id
     join constructor on constructor.id = elo_constructor.constructor_id
 where elo_driver.year = ${params.year} and elo_driver.round = ${params.round}
