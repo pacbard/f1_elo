@@ -1,27 +1,30 @@
 import duckdb
+import requests
+import zipfile
+import tempfile
+import os
 
-def download_and_unzip(url, extract_path="."):
+def download_and_unzip(url: str, extract_path: str = ".") -> None:
     """
     Downloads a zip file to a temporary location, extracts its contents, and then deletes the zip file.
 
     Args:
         url (str): The URL of the zip file.
         extract_path (str, optional): The path to extract the zip file to. Defaults to the current directory.
-    """
-    import requests
-    import zipfile
-    import io
-    import tempfile
-    import os
 
+    Raises:
+        requests.exceptions.RequestException: If there is an error downloading the file.
+        zipfile.BadZipFile: If the downloaded file is not a valid zip file.
+        Exception: For any other unexpected error.
+    """
     try:
         response = requests.get(url, stream=True)
         response.raise_for_status()
 
-        with tempfile.NamedTemporaryFile(delete=False) as temp_zip: #create temporary file
+        with tempfile.NamedTemporaryFile(delete=False) as temp_zip:  # create temporary file
             for chunk in response.iter_content(chunk_size=8192):
                 temp_zip.write(chunk)
-            temp_zip_path = temp_zip.name
+            temp_zip_path: str = temp_zip.name
 
         with zipfile.ZipFile(temp_zip_path) as zf:
             zf.extractall(extract_path)
@@ -40,7 +43,7 @@ def download_and_unzip(url, extract_path="."):
 # Download and unzip the SQLite database
 db_version = "v2025.2.0"
 
-url = f"https://github.com/f1db/f1db/releases/latest/download/f1db-sqlite.zip"
+url: str = f"https://github.com/f1db/f1db/releases/latest/download/f1db-sqlite.zip"
 
 download_and_unzip(url, extract_path=".")
 
