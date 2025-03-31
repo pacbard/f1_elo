@@ -29,15 +29,14 @@ def calculate_new_elo(conn):
     from (
       select 
         race_id, driver_id, 
-        avg(R) as R, 
-        avg(E_driver) as E_driver, 
-        avg(driver_elo) as driver_elo, 
-        avg(driver_change) as driver_change,
-        avg(driver_elo + driver_change) as new_driver_elo
+        R, 
+        E_driver, 
+        driver_elo, 
+        driver_change,
+        driver_elo + driver_change as new_driver_elo
       from  elo_calc
       where
           elo_calc.year = {year} and elo_calc.round = {round_num}
-      group by all
     ) as elo_data
     where
         elo_driver.driver_id = elo_data.driver_id
@@ -56,9 +55,9 @@ def calculate_new_elo(conn):
         race_id, constructor_id, 
         avg(R) as R, 
         avg(E_constructor) as E_constructor, 
-        avg(constructor_elo) as constructor_elo, 
-        avg(constructor_change) as constructor_change,
-        avg(constructor_elo + constructor_change) as new_constructor_elo
+        constructor_elo, 
+        sum(constructor_change) as constructor_change,
+        constructor_elo + constructor_change as new_constructor_elo
       from  elo_calc
       where
           elo_calc.year = {year} and elo_calc.round = {round_num}
