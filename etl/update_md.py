@@ -1,19 +1,29 @@
 import duckdb
 
+def update_motherduck_tables(conn, local_db_path, schema_name):
+    """
+    Updates the MotherDuck database tables with data from a local DuckDB database.
+
+    Args:
+        conn: A DuckDB connection object to the MotherDuck database.
+        local_db_path: The path to the local DuckDB database file.
+        schema_name: The schema name in the MotherDuck database to use.
+    """
+    print("Updating MotherDuck database with new data")
+    conn.execute(f"""
+        ATTACH '{local_db_path}' AS f1_local;
+        USE {schema_name};
+
+        CREATE OR REPLACE TABLE constructor AS SELECT * FROM f1_local.constructor;
+        CREATE OR REPLACE TABLE driver AS SELECT * FROM f1_local.driver;
+        CREATE OR REPLACE TABLE race AS SELECT * FROM f1_local.race;
+        CREATE OR REPLACE TABLE grand_prix AS SELECT * FROM f1_local.grand_prix;
+        CREATE OR REPLACE TABLE race_result AS SELECT * FROM f1_local.race_result;
+
+        CREATE OR REPLACE TABLE elo_driver AS SELECT * FROM f1_local.elo_driver;
+        CREATE OR REPLACE TABLE elo_constructor AS SELECT * FROM f1_local.elo_constructor;
+    """)
+
 conn = duckdb.connect('md:F1_Results')
-
-print("Update MotherDuck database with new data")
-conn.execute("""
-attach 'f1db_local.duckdb' as f1_local;
-
-use F1_Results;
-
-create or replace table constructor as select * from f1_local.constructor;
-create or replace table driver as select * from f1_local.driver;
-create or replace table race as select * from f1_local.race;
-create or replace table grand_prix as select * from f1_local.grand_prix;
-create or replace table race_result as select * from f1_local.race_result;
-
-create or replace table elo_driver as select * from f1_local.elo_driver;
-create or replace table elo_constructor as select * from f1_local.elo_constructor;
-""")
+local_db_path = 'f1db_local.duckdb'
+update_motherduck_tables(conn, local_db_path, 'F1_Results')
