@@ -16,24 +16,24 @@ def calculate_new_elo(conn):
   """).fetchall()
 
   for year, round_num in result:
-    print(f"Processing drivers: year {year}, round: {round_num}") 
+    print(f"Processing race: year {year}, round: {round_num}") 
 
     update_query = f"""
     -- Update the drivers' Elo rating after a race
     update elo_driver
         set 
             elo = elo_data.new_driver_elo,
-            elo_change = elo_data.driver_change,
+            elo_change = elo_data.change,
             R = elo_data.R,
-            E = elo_data.E_driver
+            E = elo_data.E
     from (
       select 
         race_id, driver_id, 
         R, 
-        E_driver, 
+        E, 
         driver_elo, 
-        driver_change,
-        driver_elo + driver_change as new_driver_elo
+        change,
+        driver_elo + change as new_driver_elo
       from  elo_calc
       where
           elo_calc.year = {year} and elo_calc.round = {round_num}
@@ -47,21 +47,21 @@ def calculate_new_elo(conn):
     update elo_constructor
         set 
             elo = elo_data.new_constructor_elo,
-            elo_change = elo_data.constructor_change,
+            elo_change = elo_data.change,
             R = elo_data.R,
-            E = elo_data.E_constructor
+            E = elo_data.E
     from (
       select 
         race_id, constructor_id, 
         avg(R) as R, 
-        avg(E_constructor) as E_constructor, 
+        avg(E) as E, 
         constructor_elo, 
-        sum(constructor_change) as constructor_change,
-        constructor_elo + constructor_change as new_constructor_elo
+        avg(change) as change,
+        constructor_elo + avg(change) as new_constructor_elo
       from  elo_calc
       where
           elo_calc.year = {year} and elo_calc.round = {round_num}
-      group by all
+      group by race_id, constructor_id, constructor_elo
     ) as elo_data
     where
           elo_data.constructor_id = elo_constructor.constructor_id

@@ -138,6 +138,7 @@ race_performance as (
         res.round,
         res.position,
         res2.driver_id as opponentId,
+        res2.constructor_id as opponentConstructorId,
         res2.position as opponentPosition,
         case
             when res.position::int < res2.position::int then 1
@@ -180,16 +181,20 @@ elo_setup as (
         race_performance.headToHead as R,
         -- Odds of winning: pow(10, (elo_dri.elo - elo_opp.elo)
         -- Probability of the expected outcome: odds / (odds + 1)
-        pow(10, ((elo_dri.elo - elo_opp.elo) + (elo_cons.elo - elo_copp.elo)) / 800) / (pow(10, ((elo_dri.elo - elo_opp.elo) + (elo_cons.elo - elo_copp.elo)) / 800) + 1) as E_driver,
-        pow(10, ((elo_cons.elo - elo_copp.elo) + (elo_dri.elo - elo_opp.elo)) / 800) / (pow(10, ((elo_cons.elo - elo_copp.elo) + (elo_dri.elo - elo_opp.elo)) / 800) + 1) as E_constructor,
+        pow(10, (((elo_dri.elo + elo_cons.elo) / 2) - (elo_opp.elo + elo_copp.elo) / 2) / 400) 
+        / 
+        ((pow(10, (((elo_dri.elo + elo_cons.elo) / 2) - (elo_opp.elo + elo_copp.elo) / 2) / 400)) + 1) 
+        as E,
     from race_performance
+        -- Driver Elo
         left join elo_driver_start as elo_dri on elo_dri.driver_id = race_performance.driver_id
             and elo_dri.race_id = race_performance.race_id
         left join elo_driver_start as elo_opp on elo_opp.driver_id = race_performance.opponentId
             and elo_opp.race_id = race_performance.race_id
+        -- Constructor Elo
         left join elo_constructor_start as elo_cons on elo_cons.constructor_id = race_performance.constructor_id
             and elo_cons.race_id = race_performance.race_id
-        left join elo_constructor_start as elo_copp on elo_copp.constructor_id = race_performance.constructor_id
+        left join elo_constructor_start as elo_copp on elo_copp.constructor_id = race_performance.opponentConstructorId
             and elo_copp.race_id = race_performance.race_id
     order by race_performance.race_id, race_performance.driver_id
 ),
@@ -201,23 +206,20 @@ elo_summary as (
         driver_id,
         constructor_id,
         sum(R)::float as R,
-        sum(E_driver)::float as E_driver,
-        sum(E_constructor)::float as E_constructor,
+        sum(E)::float as E,
         driver_elo,
         constructor_elo,
         -- K * (Result - Expected)
-        1::float * (sum(R)::float - sum(E_driver)::float) as driver_change,
-        0.5::float * (sum(R)::float - sum(E_constructor)::float) as constructor_change,
+        1::float * (sum(R)::float - sum(E)::float) as change,
     from elo_setup
     group by all
 )
 select 
     race_id, year, round, driver_id, constructor_id, 
-    R,
-    E_driver, driver_elo, driver_change, driver_elo + driver_change as new_driver_elo,
-    E_constructor, constructor_elo, constructor_change, constructor_elo + constructor_change as new_constructor_elo,
+    R, E, change,
+    driver_elo, driver_elo + change as new_driver_elo,
+    constructor_elo, constructor_elo + change as new_constructor_elo,
 from elo_summary
-group by all
 order by year, round, driver_id
 ;
 """
