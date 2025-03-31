@@ -67,6 +67,13 @@ where
   driver.id in ${inputs.driver_filter.value}
 ```
 
+```sql chart
+select
+  floor(min(elo) / 20) * 20 as yMin,
+  ceiling(max(elo) / 20) * 20 as yMax
+from ${timeline}
+```
+
 <LineChart
   data={timeline}
   x=date
@@ -74,8 +81,8 @@ where
   series=driver_name
   step=true
   chartAreaHeight=500
-  yMin=850
-  yMax=1500
+  yMin={chart[0].yMin}
+  yMax={chart[0].yMax}
   echartsOptions={{
       dataZoom: {
           show: true,

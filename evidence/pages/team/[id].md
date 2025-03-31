@@ -76,6 +76,8 @@ from ${timeline}
   <Column id=short_name/>
   <Column id=year/>
   <Column id=round/>
+  <Column id=R title="HtH Result"/>
+  <Column id=E title="HtH Expectation"/>
   <Column id=elo/>
   <Column id=elo_change contentType=delta/>
   <Column id=race_link contentType=link linkLabel="Race Details"/>

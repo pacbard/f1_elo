@@ -9,20 +9,22 @@ select * from race where race.year = ${params.year} and race.round = ${params.ro
 ```sql race_driver
 select
     *,
-    max(R) over (partition by elo_driver.year, elo_driver.round) - R + 1 as position,
-    max(E) over (partition by elo_driver.year, elo_driver.round) - E + 1 as expected
+    elo_driver.R as position,
+    elo_driver.E as expected
 from elo_driver
+    join elo_constructor on elo_constructor.race_id = elo_driver.race_id and elo_constructor.constructor_id = elo_driver.constructor_id
     join driver on driver.id = elo_driver.driver_id
+    join constructor on constructor.id = elo_constructor.constructor_id
 where elo_driver.year = ${params.year} and elo_driver.round = ${params.round}
-order by position 
+order by position desc
 ```
 
 <DataTable data={race_driver} rows=all>
     <Column id=name/>
     <Column id=elo_change contentType=delta/>
     <Column id=elo/>
-    <Column id=position/>
-    <Column id=expected/>
+    <Column id=position title="HtH Wins" fmt=num/>
+    <Column id=expected title="HtH Expected" fmt=num1/>
 </DataTable>
 
 ## Constructor Results
@@ -30,18 +32,18 @@ order by position
 ```sql race_constructor
 select
     *,
-    max(R) over (partition by elo_constructor.year, elo_constructor.round) - R + 1 as position,
-    max(E) over (partition by elo_constructor.year, elo_constructor.round) - E + 1 as expected
+    R as position,
+    E as expected
 from elo_constructor
     join constructor on constructor.id = elo_constructor.constructor_id
 where elo_constructor.year = ${params.year} and elo_constructor.round = ${params.round}
-order by position 
+order by position desc
 ```
 
 <DataTable data={race_constructor} rows=all>
     <Column id=name/>
     <Column id=elo_change contentType=delta fmt=num1/>
     <Column id=elo fmt=num0/>
-    <Column id=position fmt=num/>
-    <Column id=expected fmt=num1/>
+    <Column id=position title="HtH Wins" fmt=num/>
+    <Column id=expected title="HtH Expected" fmt=num1/>
 </DataTable>

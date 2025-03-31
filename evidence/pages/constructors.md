@@ -45,6 +45,13 @@ where
   constructor.id in ${inputs.constructor_filter.value}
 ```
 
+```sql chart
+select
+  floor(min(elo) / 20) * 20 as yMin,
+  ceiling(max(elo) / 20) * 20 as yMax
+from ${timeline}
+```
+
 <LineChart
   data={timeline}
   x=date
@@ -52,8 +59,8 @@ where
   series=constructor_name
   step=true
   chartAreaHeight=500
-  yMin=850
-  yMax=1550
+  yMin={chart[0].yMin}
+  yMax={chart[0].yMax}
   echartsOptions={{
       dataZoom: {
           show: true,
