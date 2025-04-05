@@ -55,6 +55,9 @@ create_query = f"""
 attach 'f1db.db' as f1db (type sqlite, READ_ONLY);
 attach 'md:F1_Results' as F1_Results;
 
+truncate table F1_Results.elo_driver;
+truncate table F1_Results.elo_constructor;
+
 -- Copy over the tables from the SQLite database
 create or replace table driver as
 select * from f1db.driver;
@@ -73,7 +76,7 @@ select * from f1db.race_result;
 
 -- Create Elo Driver Table
 create or replace table elo_driver as
-select 
+select distinct
 	race_result.driver_id, 
 	race_result.race_id,
 	race.year,
@@ -118,7 +121,7 @@ res as (
         driver.abbreviation as driver_ref,
         constructor.id as constructor_id,
         case
-            when race_result.position_number is null then (select max(rr.position_number) from race_result as rr where rr.race_id = race.id) + 1
+            when race_result.position_number is null then (select max(rr.position_number) + 1 from race_result as rr where rr.race_id = race.id)
             else race_result.position_number::int 
         end as position,
         constructor.name as constructor_name,
