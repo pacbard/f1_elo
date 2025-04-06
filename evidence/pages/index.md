@@ -83,7 +83,7 @@ from ${timeline}
 
 <LineChart
   data={timeline}
-  x=date
+  x=round
   y=elo
   series=driver_name
   step=true
@@ -174,7 +174,7 @@ from ${constructor}
 
 <LineChart
   data={constructor}
-  x=date
+  x=round
   y=elo
   series=constructor_name
   step=true
