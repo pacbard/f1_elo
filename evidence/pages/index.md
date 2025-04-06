@@ -3,34 +3,10 @@ title: F1 Elo Ratings 🏎️
 ---
 
 ```sql seasons
-select distinct year from race
+select distinct year from race order by year desc
 ```
 
-<Dropdown data={seasons} name=season value=year defaultValue={seasons.max} title=Season/>
-
-```sql driver
-select
-  driver.*,
-  driver.name as driver_name,
-  row_number() over (order by elo.year, elo.round) as race_order,
-  elo.year,
-  elo.round,
-  race.date,
-  race.official_name,
-  race.short_name,
-  race.grand_prix_id,
-  elo.driver_id,
-  elo.elo,
-  elo.elo_change,
-  elo.R,
-  elo.E,
-  from f1_results.driver
-  join f1_results.elo_driver as elo on driver.id = elo.driver_id
-  join f1_results.race on race.id = elo.race_id
-where
-    race.year = ${inputs.season.value}
-order by race.year desc, race.round desc
-```
+<Dropdown data={seasons} name=season value=year defaultValue={[2025]} title=Season/>
 
 # Driver Standings
 
@@ -52,7 +28,7 @@ select
   elo.E,
   '/race/' || cast(race.year as int) || '/' || cast(race.round as int) as race_link,
   dense_rank() over (order by race_id desc) as season_standings
-  from f1_results.driver
+from f1_results.driver
   join f1_results.elo_driver as elo on driver.id = elo.driver_id
   join f1_results.race on race.id = elo.race_id
 where
@@ -71,7 +47,7 @@ order by race.year desc, race.round desc
 <Details title='Progress Chart'>
 
 ```sql timeline
-select * from ${driver} 
+select * from ${driver_standings} 
 ```
 
 ```sql chart
