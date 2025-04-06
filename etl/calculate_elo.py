@@ -12,6 +12,7 @@ def calculate_new_elo(conn):
       SELECT DISTINCT 
         year, round 
       FROM elo_driver
+      where elo is null
       order by year, round
   """).fetchall()
 

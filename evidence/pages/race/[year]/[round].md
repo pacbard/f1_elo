@@ -10,7 +10,8 @@ select * from race where race.year = ${params.year} and race.round = ${params.ro
 select
     *,
     elo_driver.R as position,
-    elo_driver.E as expected
+    elo_driver.E as expected,
+    '/driver/' || driver.id as driver_link
 from race_result
     join elo_driver on elo_driver.race_id = race_result.race_id and elo_driver.driver_id = race_result.driver_id
     join elo_constructor on elo_constructor.race_id = race_result.race_id and elo_constructor.constructor_id = race_result.constructor_id
@@ -20,7 +21,7 @@ where elo_driver.year = ${params.year} and elo_driver.round = ${params.round}
 order by position desc
 ```
 
-<DataTable data={race_driver} rows=all>
+<DataTable data={race_driver} rows=all link=driver_link>
     <Column id=name/>
     <Column id=elo_change contentType=delta/>
     <Column id=elo/>
@@ -34,14 +35,15 @@ order by position desc
 select
     *,
     R as position,
-    E as expected
+    E as expected,
+    '/team/' || constructor.id as constructor_link
 from elo_constructor
     join constructor on constructor.id = elo_constructor.constructor_id
 where elo_constructor.year = ${params.year} and elo_constructor.round = ${params.round}
 order by position desc
 ```
 
-<DataTable data={race_constructor} rows=all>
+<DataTable data={race_constructor} rows=all link=constructor_link>
     <Column id=name/>
     <Column id=elo_change contentType=delta fmt=num1/>
     <Column id=elo fmt=num0/>
