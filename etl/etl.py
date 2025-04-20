@@ -41,9 +41,7 @@ def download_and_unzip(url: str, extract_path: str = ".") -> None:
         print(f"An unexpected error occurred: {e}")
 
 # Download and unzip the SQLite database
-db_version = "v2025.2.0"
-
-url: str = f"https://github.com/f1db/f1db/releases/latest/download/f1db-sqlite.zip"
+url: str = "https://github.com/f1db/f1db/releases/latest/download/f1db-sqlite.zip"
 
 download_and_unzip(url, extract_path=".")
 
