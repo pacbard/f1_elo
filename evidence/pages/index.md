@@ -8,6 +8,28 @@ select distinct year from race order by year desc
 
 <Dropdown data={seasons} name=season value=year defaultValue={[2025]} title=Season/>
 
+# Races
+```sql races
+select
+  race.round,
+  race.date,
+  race.official_name,
+  race.short_name,
+  race.grand_prix_id,
+  '/race/' || cast(race.year as int) || '/' || cast(race.round as int) as race_link,
+  from f1_results.race
+where
+    race.year = ${inputs.season.value}
+    and race.round <= (select max(round) from f1_results.elo_driver where year = ${inputs.season.value})
+order by race.year desc, race.round
+```
+
+<DataTable data={races} link=race_link rows=all>
+  <Column id=round/>
+  <Column id=date/>
+  <Column id=short_name title=Name/>
+</DataTable>
+
 # Driver Standings
 
 ```sql driver_standings
