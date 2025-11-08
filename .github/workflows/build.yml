@@ -48,11 +48,12 @@ jobs:
       - name: Install dependencies
         working-directory: evidence/
         run: npm install
+      - name: Run Evidence sources
+        working-directory: evidence/
+        run: npm exec evidence sources
       - name: Build Evidence project
         working-directory: evidence/
-        run: |
-          npm exec evidence sources
-          npm exec evidence build
+        run: npm exec evidence build
       - name: Deploy to GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
