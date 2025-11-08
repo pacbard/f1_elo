@@ -1,0 +1,59 @@
+name: Build GitHub Pages Website
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * 1' # Run at 12:00 AM on Monday
+  workflow_dispatch:
+
+jobs:
+  etl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Install the project
+        run: uv sync --all-extras --dev
+      - name: Run ETL scripts
+        working-directory: etl/
+        run: |
+          uv run python etl.py
+          uv run python calculate_elo.py
+      - name: Upload data artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: database
+          path: etl/f1db_local.duckdb
+
+  build:
+    needs: etl
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Fetch data artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: database
+      - name: Move database to evidence directory
+        run: mv f1db_local.duckdb evidence/sources/f1_results/
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        working-directory: evidence/
+        run: npm install
+      - name: Build Evidence project
+        working-directory: evidence/
+        run: |
+          npm exec evidence sources
+          npm exec evidence build
+      - name: Deploy to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'evidence/build/'

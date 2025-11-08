@@ -8,7 +8,7 @@
             "databaseFilePath": "f1_results.duckdb"
         }
     ],
-    "editor.acceptSuggestionOnEnter": true,
+    "editor.acceptSuggestionOnEnter": false,
     "editor.quickSuggestions": {
         "other": false,
         "comments": false,
