@@ -29,13 +29,4 @@ For example, if a driver ends the race in 5th position out of 12 drivers, they h
 
 ### Data Source:
 
-The dataset used for this project is available on [Motherduck](https://motherduck.com). It contains comprehensive F1 race results, driver information, and constructor data.
-
-### Accessing the Data:
-
-Download the dataset using this share:
-
-```Code
--- Run this snippet to attach database
-ATTACH 'md:_share/F1_Results/2c252e3d-f9a1-4ab1-93e1-328d84b6347b';
-```
+The data for this project is sourced from the [Ergast F1 API](http://ergast.com/mrd/), which provides comprehensive historical data on Formula 1 racing, including race results, driver statistics, and constructor information.
