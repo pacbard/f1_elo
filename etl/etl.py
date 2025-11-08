@@ -51,10 +51,6 @@ conn = duckdb.connect(db_path)
 
 create_query = f"""
 attach 'f1db.db' as f1db (type sqlite, READ_ONLY);
-attach 'md:F1_Results' as F1_Results;
-
-truncate table F1_Results.elo_driver;
-truncate table F1_Results.elo_constructor;
 
 -- Copy over the tables from the SQLite database
 create or replace table driver as
@@ -79,12 +75,11 @@ select distinct
 	race_result.race_id,
 	race.year,
 	race.round,
-	md_elo.elo_change::float as elo_change,
-	md_elo.elo::float as elo,
-	md_elo.R::float as R, 
-	md_elo.E::float as E
+	NULL as elo_change,
+	NULL as elo,
+	NULL as R, 
+	NULL as E
 from race_result
-    left join F1_Results.elo_driver as md_elo on md_elo.driver_id = race_result.driver_id and md_elo.race_id = race_result.race_id
 	join race on race.id = race_result.race_id
 order by race_result.driver_id, race.year, race.round
 ;
@@ -96,12 +91,11 @@ select distinct
 	race_result.race_id,
 	race.year,
 	race.round,
-	md_elo.elo_change::float as elo_change,
-	md_elo.elo::float as elo,
-	md_elo.R::float as R, 
-	md_elo.E::float as E
+	NULL as elo_change,
+	NULL as elo,
+	NULL as R, 
+	NULL as E
 from race_result
-    left join F1_Results.elo_constructor as md_elo on md_elo.constructor_id = race_result.constructor_id and md_elo.race_id = race_result.race_id
 	join race on race.id = race_result.race_id
 order by race_result.constructor_id, race.year, race.round
 ;
