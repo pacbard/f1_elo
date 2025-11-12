@@ -1,0 +1,4 @@
+[submodule "evidence/packs"]
+	path = evidence/packs
+	url = git@github.com:ebardelli/evidence.git
+	branch = all_fixes
