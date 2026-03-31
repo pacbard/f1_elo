@@ -28,6 +28,8 @@
     "@rollup/rollup-linux-x64-gnu": "4.37.0"
   },
   "overrides": {
+    "@duckdb/duckdb-async": "1.4.2",
+    "@duckdb/duckdb-wasm": "1.33.1-dev41.0",
     "jsonwebtoken": "9.0.0",
     "trim@<0.0.3": ">0.0.3",
     "sqlite3": "5.1.5",
