@@ -6,7 +6,7 @@ title: F1 Elo Ratings 🏎️
 select distinct year from race order by year desc
 ```
 
-<Dropdown data={seasons} name=season value=year defaultValue={[2025]} title=Season/>
+<Dropdown data={seasons} name=season value=year defaultValue={[2026]} title=Season/>
 
 # Races
 ```sql races

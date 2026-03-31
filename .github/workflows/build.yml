@@ -3,61 +3,62 @@ name: Build GitHub Pages Website
 on:
   push:
     branches:
-      - main
+    - main
   schedule:
-    - cron: '0 0 * * 1' # Run at 12:00 AM on Monday
+  - cron: '0 0 * * 1'   # Run at 12:00 AM on Monday
   workflow_dispatch:
 
 jobs:
   etl:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-      - name: Install the project
-        run: uv sync --all-extras --dev
-      - name: Run ETL scripts
-        working-directory: etl/
-        run: |
-          uv run python etl.py
-          uv run python calculate_elo.py
-      - name: Upload data artifacts
-        uses: actions/upload-artifact@v5
-        with:
-          name: database
-          path: etl/f1db_local.duckdb
+    - name: Checkout code
+      uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
+    - name: Install uv
+      uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86
+    - name: Install the project
+      run: uv sync --all-extras --dev
+    - name: Run ETL scripts
+      working-directory: etl/
+      run: |
+        uv run python etl.py
+        uv run python calculate_elo.py
+    - name: Upload data artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      with:
+        name: database
+        path: etl/f1db_local.duckdb
 
   build:
     needs: etl
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-      - name: Fetch data artifacts
-        uses: actions/download-artifact@v5
-        with:
-          name: database
-      - name: Move database to evidence directory
-        run: mv f1db_local.duckdb evidence/sources/f1_results/
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-      - name: Install dependencies
-        working-directory: evidence/
-        run: npm install
-      - name: Run Evidence sources
-        working-directory: evidence/
-        run: npm exec evidence sources
-      - name: Build Evidence project
-        working-directory: evidence/
-        run: npm exec evidence build
-      - name: Deploy to GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: 'evidence/build/'
+    - name: Checkout code
+      uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+    - name: Fetch data artifacts
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+      with:
+        name: database
+    - name: Move database to evidence directory
+      run: mv f1db_local.duckdb evidence/sources/f1_results/
+    - name: Setup Node.js
+      uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
+      with:
+        node-version: '22'
+    - name: Install dependencies
+      working-directory: evidence/
+      run: npm install
+    - name: Run Evidence sources
+      working-directory: evidence/
+      run: npm exec evidence sources
+    - name: Build Evidence project
+      working-directory: evidence/
+      run: npm exec evidence build
+    - name: Deploy to GitHub Pages
+      uses: 
+        actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
+      with:
+        path: 'evidence/build/'
 
   publish:
     needs: build
@@ -69,6 +70,6 @@ jobs:
       pages: write
       id-token: write
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e

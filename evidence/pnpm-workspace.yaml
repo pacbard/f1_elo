@@ -1,4 +1,0 @@
-packages:
-  - "packs/packages/**"
-  - "packs/sites/**"
-  - "packs/packages/*"

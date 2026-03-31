@@ -2,7 +2,7 @@
 type: duckdb
 name: f1_results
 options:
-  filename: f1db_local.duckdb
+  filename: ../../../etl/f1db_local.duckdb
 # Advanced Options, you probably don't want to change this
 buildOptions:
   batchSize: 1000000
