@@ -40,7 +40,7 @@ jobs:
       with:
         name: database
     - name: Move database to evidence directory
-      run: mv f1db_local.duckdb evidence/sources/f1_results/
+      run: mv f1db_local.duckdb etl/
     - name: Setup Node.js
       uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
       with:
