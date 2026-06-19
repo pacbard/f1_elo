@@ -33,8 +33,7 @@ This project calculates and tracks Elo ratings for Formula 1 drivers and teams.
     ```bash
     cd etl
     uv run python etl.py
-    uv run pyton calculate_elo.py
-    uv run python update_md.py
+    uv run python calculate_elo.py
     ```
 
 ## Contributing

@@ -49,6 +49,8 @@ db_path = "f1db_local.duckdb"
 
 conn = duckdb.connect(db_path)
 
+constructor_weight = 0.5  # 0 = pure driver Elo, 1 = equal driver/constructor blend
+
 create_query = f"""
 attach 'f1db.db' as f1db (type sqlite, READ_ONLY);
 
@@ -140,11 +142,9 @@ race_performance as (
             when res.position::int = res2.position::int then 0.5
             when res.position::int > res2.position::int then 0
         end as headToHead,
-        count(distinct res2.driver_id) as nOpponents
     from res
-    join res as res2 on res2.race_id = res.race_id 
+    join res as res2 on res2.race_id = res.race_id
         and res2.driver_id != res.driver_id
-    group by all
 ),
 elo_driver_start as (
     select
@@ -174,12 +174,15 @@ elo_setup as (
         elo_dri.elo as driver_elo,
         elo_cons.elo as constructor_elo,
         race_performance.headToHead as R,
-        -- Odds of winning: pow(10, (elo_dri.elo - elo_opp.elo)
-        -- Probability of the expected outcome: odds / (odds + 1)
-        pow(10, (((elo_dri.elo + elo_cons.elo) / 2) - (elo_opp.elo + elo_copp.elo) / 2) / 400) 
-        / 
-        ((pow(10, (((elo_dri.elo + elo_cons.elo) / 2) - (elo_opp.elo + elo_copp.elo) / 2) / 400)) + 1) 
-        as E,
+        pow(10, (
+            (elo_dri.elo + {constructor_weight} * elo_cons.elo) / {1 + constructor_weight}
+            - (elo_opp.elo + {constructor_weight} * elo_copp.elo) / {1 + constructor_weight}
+        ) / 400) / (pow(10, (
+            (elo_dri.elo + {constructor_weight} * elo_cons.elo) / {1 + constructor_weight}
+            - (elo_opp.elo + {constructor_weight} * elo_copp.elo) / {1 + constructor_weight}
+        ) / 400) + 1) as E_driver,
+        pow(10, (elo_cons.elo - elo_copp.elo) / 400)
+        / (pow(10, (elo_cons.elo - elo_copp.elo) / 400) + 1) as E_constructor,
     from race_performance
         -- Driver Elo
         left join elo_driver_start as elo_dri on elo_dri.driver_id = race_performance.driver_id
@@ -200,20 +203,22 @@ elo_summary as (
         round,
         driver_id,
         constructor_id,
-        sum(R)::float as R,
-        sum(E)::float as E,
         driver_elo,
         constructor_elo,
-        -- K * (Result - Expected)
-        1::float * (sum(R)::float - sum(E)::float) as change,
+        sum(R)::float as R,
+        sum(E_driver)::float as E_driver,
+        sum(E_constructor)::float as E_constructor,
+        count(*) as nOpponents,
+        32::float * (sum(R)::float - sum(E_driver)::float) / count(*) as driver_change,
+        32::float * (sum(R)::float - sum(E_constructor)::float) / count(*) as constructor_change,
     from elo_setup
-    group by all
+    group by race_id, year, round, driver_id, constructor_id, driver_elo, constructor_elo
 )
-select 
-    race_id, year, round, driver_id, constructor_id, 
-    R, E, change,
-    driver_elo, driver_elo + change as new_driver_elo,
-    constructor_elo, constructor_elo + change as new_constructor_elo,
+select
+    race_id, year, round, driver_id, constructor_id,
+    R, E_driver, E_constructor, driver_change, constructor_change,
+    driver_elo, driver_elo + driver_change as new_driver_elo,
+    constructor_elo, constructor_elo + constructor_change as new_constructor_elo,
 from elo_summary
 order by year, round, driver_id
 ;

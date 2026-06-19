@@ -22,20 +22,20 @@ def calculate_new_elo(conn):
     update_query = f"""
     -- Update the drivers' Elo rating after a race
     update elo_driver
-        set 
+        set
             elo = elo_data.new_driver_elo,
-            elo_change = elo_data.change,
+            elo_change = elo_data.driver_change,
             R = elo_data.R,
-            E = elo_data.E
+            E = elo_data.E_driver
     from (
-      select 
-        race_id, driver_id, 
-        R, 
-        E, 
-        avg(driver_elo) as driver_elo, 
-        avg(change) as change,
-        avg(driver_elo + change) as new_driver_elo
-      from  elo_calc
+      select
+        race_id, driver_id,
+        R,
+        E_driver,
+        avg(driver_elo) as driver_elo,
+        avg(driver_change) as driver_change,
+        avg(driver_elo + driver_change) as new_driver_elo
+      from elo_calc
       where
           elo_calc.year = {year} and elo_calc.round = {round_num}
       group by all
@@ -47,20 +47,20 @@ def calculate_new_elo(conn):
 
     -- Update the constructors' Elo rating after a race
     update elo_constructor
-        set 
+        set
             elo = elo_data.new_constructor_elo,
-            elo_change = elo_data.change,
+            elo_change = elo_data.constructor_change,
             R = elo_data.R,
-            E = elo_data.E
+            E = elo_data.E_constructor
     from (
-      select 
-        race_id, constructor_id, 
-        avg(R) as R, 
-        avg(E) as E, 
-        avg(constructor_elo) as constructor_elo, 
-        avg(change) as change,
-        avg(constructor_elo + change) as new_constructor_elo
-      from  elo_calc
+      select
+        race_id, constructor_id,
+        avg(R) as R,
+        avg(E_constructor) as E_constructor,
+        avg(constructor_elo) as constructor_elo,
+        avg(constructor_change) as constructor_change,
+        avg(constructor_elo + constructor_change) as new_constructor_elo
+      from elo_calc
       where
           elo_calc.year = {year} and elo_calc.round = {round_num}
       group by race_id, constructor_id, constructor_elo
